@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IComp.sol";
 import "./interfaces/IGovernorBravo.sol";
-import "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Compensator {
     using SafeERC20 for IComp;
@@ -57,6 +57,7 @@ contract Compensator {
     constructor(address _delegate) {
         delegate = _delegate;
         rewardIndex = 1e18;
+        compToken.delegate(delegate);
     }
 
     /// @notice Allows the delegate to deposit COMP to be used for rewards
@@ -64,7 +65,7 @@ contract Compensator {
     function delegateDeposit(uint256 amount) external onlyDelegate {
         require(amount > 0, "Amount must be greater than 0");
 
-        compToken.safeTransferFrom(delegate, address(this), amount);
+        compToken.transferFrom(delegate, address(this), amount);
         availableRewards += amount;
 
         // TODO: Event emission
@@ -80,20 +81,20 @@ contract Compensator {
         require(amount <= availableRewards, "Amount must be less than available rewards");
 
         availableRewards -= amount;
-        compToken.safeTransfer(delegate, amount);
+        compToken.transfer(delegate, amount);
         
         // TODO: Event emission
     }
 
 
     /// @notice Allows the delegate to update the reward rate
-    /// @param amount The new reward rate in COMP per second
+    /// @param newRate The new reward rate in COMP per second
     function setRewardRate(uint256 newRate) external onlyDelegate {
-        require(amount >= 0, "Reward rate must be non-negative");
+        require(newRate >= 0, "Reward rate must be non-negative");
 
         // TODO: Trigger an update to the rewardsIndex before updating the rate
 
-        rewardRate = amount;
+        rewardRate = newRate;
 
         // TODO: Event emission
     }
@@ -144,13 +145,13 @@ contract Compensator {
         lastRewarded = block.timestamp;
     }
 
-    function delegate(uint256 amount) external {
+    function delegatorDeposit(uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
 
         // TODO: Update the rewards index before updating the state
 
         // Transfer COMP from delegator to the contract
-        compToken.safeTransferFrom(msg.sender, address(this), amount);
+        compToken.transferFrom(msg.sender, address(this), amount);
         // TODO: Mint them an ERC20 token back for record keeping
         
         // Delegate the COMP tokens held in this contract the delegate
@@ -159,7 +160,7 @@ contract Compensator {
         // TODO: Emit and event
     }
 
-    function undelegate(uint256 amount) external {
+    function delegatorWithdraw(uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
         // TODO: Require this delegator is not currently incentivizing any proposals
 
@@ -170,7 +171,7 @@ contract Compensator {
         // Update reward index and last rewarded timestamp
         lastRewarded = block.timestamp;
 
-        compToken.safeTransfer(msg.sender, amount);
+        compToken.transfer(msg.sender, amount);
 
         // TODO: Emit and event
     }
@@ -190,7 +191,7 @@ contract Compensator {
         }
     }
 
-    function recoverIncentive(uint propoalId) external {
+    function recoverIncentive(uint proposalId) external {
         require(proposals[proposalId].active == false, "Proposal is still active");
         require(proposals[proposalId].escrowUntil > block.timestamp, "Proposal is not yet resolved");
 
