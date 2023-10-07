@@ -65,6 +65,9 @@ The project has two main features:
 #### `castVote(uint proposalId, bool support) onlyDelegate`
 * Delegate votes on a COMP proposal
 
+#### `claimVoteReward(uint proposalId) onlyDelegate`
+* Delegate claims their reward for voting on a proposal
+
 #### `delegate(uint256 amount)`
 * Delegator delegates COMP to the delegatee's Compensator contract
 * COMP is deposited into the Compensator contract
@@ -73,6 +76,9 @@ The project has two main features:
 * Delegator undelegates COMP from the delegatee's Compensator contract
 * COMP is withdrawn from the Compensator contract
 * Any COMP rewards are claimed on withdraw
+
+#### `incentivize(uint proposalId, bool support, uint amount)`
+* Delegator pays the delegatee to vote for/against a proposal
 
 #### `claimRewards()`
 * Delegator claims their rewards in COMP
