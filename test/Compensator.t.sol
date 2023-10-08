@@ -30,6 +30,16 @@ contract CompensatorTest is Test {
         deal(address(compToken), delegator3, 1000 ether);
 
     }
+}
+
+contract CompensatorDelegateTest is CompensatorTest {
+
+    function test_setRewardRate() public {
+        vm.prank(delegate);
+        compensator.setRewardRate(100 ether);
+
+        assertEq(compensator.rewardRate(), 100 ether);
+    }
 
     function test_delegateDeposit() public {
         uint initialBalanceCompensator = compToken.balanceOf(address(compensator));
@@ -65,6 +75,9 @@ contract CompensatorTest is Test {
         assertEq(finalBalanceCompensator, initialBalanceCompensator - 100 ether);
         assertEq(finalBalanceDelegate, initialBalanceDelegate + 100 ether);
     }
+}
+
+contract CompensatorDelegatorTest is CompensatorTest {
 
     function test_delegatorDeposit() public {
         uint initialBalanceCompensator = compToken.balanceOf(address(compensator));
@@ -80,6 +93,7 @@ contract CompensatorTest is Test {
 
         assertEq(finalBalanceCompensator, initialBalanceCompensator + 100 ether);
         assertEq(finalBalanceDelegator, initialBalanceDelegator - 100 ether);
+        assertEq(compensator.balanceOf(delegator1), 100 ether);
         assertEq(compToken.getCurrentVotes(delegate), 100 ether);
     }
 
@@ -88,9 +102,10 @@ contract CompensatorTest is Test {
         compToken.approve(address(compensator), 100 ether);
         compensator.delegatorDeposit(100 ether);
         vm.stopPrank();
-        
-        assertEq(compToken.getCurrentVotes(delegate), 100 ether);
 
+        assertEq(compToken.getCurrentVotes(delegate), 100 ether);
+        assertEq(compensator.balanceOf(delegator1), 100 ether);
+        
         uint initialBalanceCompensator = compToken.balanceOf(address(compensator));
         uint initialBalanceDelegator = compToken.balanceOf(delegator1);
 
@@ -102,7 +117,109 @@ contract CompensatorTest is Test {
 
         assertEq(finalBalanceCompensator, initialBalanceCompensator - 100 ether);
         assertEq(finalBalanceDelegator, initialBalanceDelegator + 100 ether);
+        assertEq(compensator.balanceOf(delegator1), 0);
         assertEq(compToken.getCurrentVotes(delegate), 0);
     }
 
+    function test_claimRewardsSingleDelegator() public {
+        uint oneHundredEther = 100 ether;
+        uint year = 365 days;
+        // Delegate deposits
+        vm.startPrank(delegate);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegateDeposit(100 ether);
+        compensator.setRewardRate(oneHundredEther / year); // 100 COMP / year
+        vm.stopPrank();
+
+        // Delegator 1 deposits
+        vm.startPrank(delegator1);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegatorDeposit(100 ether);
+        vm.stopPrank();
+
+        // Advance 1 day
+        vm.warp(block.timestamp + 1 days);
+
+        // Delegator 1 claims rewards
+        uint initialBalanceCompensator = compToken.balanceOf(address(compensator));
+        uint initialBalanceDelegator = compToken.balanceOf(delegator1);
+
+        vm.prank(delegator1);
+        compensator.claimRewards();
+
+        uint finalBalanceCompensator = compToken.balanceOf(address(compensator));
+        uint finalBalanceDelegator = compToken.balanceOf(delegator1);
+
+        uint expectedRewards = oneHundredEther / year * 1 days;
+        assertEq(finalBalanceCompensator, initialBalanceCompensator - expectedRewards);
+        assertEq(finalBalanceDelegator, initialBalanceDelegator + expectedRewards);
+    }
+
+    function test_claimRewardsMultipleDelegators() public {
+        uint oneHundredEther = 100 ether;
+        uint year = 365 days;
+        // Delegate deposits
+        vm.startPrank(delegate);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegateDeposit(100 ether);
+        compensator.setRewardRate(oneHundredEther / year); // 100 COMP / year
+        vm.stopPrank();
+
+        // Delegator 1 deposits
+        vm.startPrank(delegator1);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegatorDeposit(100 ether);
+        vm.stopPrank();
+
+        // Advance 1 day
+        vm.warp(block.timestamp + 1 days);
+
+        // Delegator 2 deposits
+        vm.startPrank(delegator2);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegatorDeposit(100 ether);
+        vm.stopPrank();
+
+        // Advance 1 day
+        vm.warp(block.timestamp + 1 days);
+
+        // Delegator 3 deposits
+        vm.startPrank(delegator3);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegatorDeposit(100 ether);
+        vm.stopPrank();
+
+        // Advance 1 day
+        vm.warp(block.timestamp + 1 days); // minus 2 seconds to account two txns
+
+        uint initialBalanceCompensator = compToken.balanceOf(address(compensator));
+        uint initialBalanceDelegator1 = compToken.balanceOf(delegator1);
+        uint initialBalanceDelegator2 = compToken.balanceOf(delegator2);
+        uint initialBalanceDelegator3 = compToken.balanceOf(delegator3);
+
+        // Delegators claim rewards
+        vm.prank(delegator1);
+        compensator.claimRewards();
+
+        vm.prank(delegator2);
+        compensator.claimRewards();
+
+        vm.prank(delegator3);
+        compensator.claimRewards();
+
+        uint finalBalanceCompensator = compToken.balanceOf(address(compensator));
+        uint finalBalanceDelegator1 = compToken.balanceOf(delegator1);
+        uint finalBalanceDelegator2 = compToken.balanceOf(delegator2);
+        uint finalBalanceDelegator3 = compToken.balanceOf(delegator3);
+
+        uint oneDayReward = oneHundredEther / year * 1 days;
+        uint delegator3ExpectedRewards = oneDayReward / 3;
+        uint delegator2ExpectedRewards = oneDayReward / 2 + delegator3ExpectedRewards;
+        uint delegator1ExpectedRewards = oneDayReward + delegator2ExpectedRewards;
+
+        assertEq(finalBalanceDelegator1, initialBalanceDelegator1 + delegator1ExpectedRewards);
+        assertEq(finalBalanceDelegator2, initialBalanceDelegator2 + delegator2ExpectedRewards);
+        assertEq(finalBalanceDelegator3, initialBalanceDelegator3 + delegator3ExpectedRewards);
+        assertEq(finalBalanceCompensator, initialBalanceCompensator - 3 * oneDayReward);
+    }
 }
