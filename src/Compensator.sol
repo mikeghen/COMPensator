@@ -9,35 +9,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract Compensator is ERC20 {
     using SafeERC20 for IComp;
 
-    IComp public constant compToken = IComp(0xc00e94Cb662C3520282E6f5717214004A7f26888);
-    IGovernorBravo public constant governorBravo = IGovernorBravo(0xc0Da02939E1441F497fd74F78cE7Decb17B66529);
-
-    //////////////////////////
-    // Structures
-    //////////////////////////
-
-    struct Proposal {
-        bool active; // Whether the proposal is still active
-        uint256 escrowUntil; // Timestamp when the proposal is rewards can be released
-        uint256 paymentFor; // Amount of COMP to incentivize the for vote
-        uint256 paymentAgainst; // Amount of COMP to incentivize the against vote
-        uint256 outcome; // 0 = abstain, 1 = for, 2 = against
-    }
-
-    struct VoteIncentive {
-        uint256 amount; // Amount of COMP to incentivize with
-        uint256 outcome; // 0 = abstain, 1 = for, 2 = against
-    }
-
-    /// @notice Delegators deposit COMP to receive COMPSTR tokens
-    /// This starts a DelegatorPosition. On each additional deposit, 
-    /// the rewards accumulated are distributed and the DelegatorPosition's
-    /// startRewardIndex is reset
 
 
     //////////////////////////
     // Variables
     //////////////////////////
+
+    /// @notice The COMP governance token
+    IComp public constant compToken = IComp(0xc00e94Cb662C3520282E6f5717214004A7f26888);
+
+    /// @notice The Governor Bravo contract for COMP governance
+    IGovernorBravo public constant governorBravo = IGovernorBravo(0xc0Da02939E1441F497fd74F78cE7Decb17B66529);
 
     /// @notice The address of the delegate
     address public delegate;
@@ -54,17 +36,11 @@ contract Compensator is ERC20 {
     /// @notice Timestamp of the last time rewards were claimed (i.e. the rewardIndex was updated)
     uint256 public lastRewarded;
 
-    /// @notice Mapps proposal ID to proposal information
-    mapping(uint => Proposal) public proposals;
-
     /// @notice Mapps delegator to their claimed rewards
     mapping(address => uint) public claimedRewards;
 
     /// @notice Delegator starting reward index, used for calculating rewards
     mapping(address => uint) public startRewardIndex;
-
-    /// @notice Mapps proposal ID to delegators to their vote incentive for the proposal
-    mapping(uint => mapping(address => VoteIncentive)) public voteIncentives;
 
     //////////////////////////
     // Events
@@ -137,57 +113,10 @@ contract Compensator is ERC20 {
     function setRewardRate(uint256 newRate) external onlyDelegate {
         require(newRate >= 0, "Reward rate must be non-negative");
 
-        // TODO: Trigger an update to the rewardsIndex before updating the rate
-
+        _updateRewardsIndex();
         rewardRate = newRate;
-
-        // TODO: Event emission
-    }
-
-    /// @notice Allows the delegate to register a new proposal
-    /// @param proposalId The ID of the COMP proposal to register for rewards
-    function registerProposal(uint proposalId) external onlyDelegate {
-        require(proposals[proposalId].active == false, "Proposal already registered");
-
-        // Register a new proposal
-        proposals[proposalId] = Proposal({
-            active: true,
-            escrowUntil: block.timestamp + 10 days, 
-            paymentFor: 0,
-            paymentAgainst: 0,
-            outcome: 0
-        });
-
-
-        // TODO: Event emission
-    }
-
-    /// @notice Allows the delegate to cast their vote on a proposal, proxies to governorBravo
-    /// @param proposalId The ID of the COMP proposal to vote on
-    /// @param support Whether to vote for or against the proposal
-    function castVote(uint proposalId, bool support) external onlyDelegate {
-        require(proposals[proposalId].active, "Proposal is not active");
-
-        // TODO: Cast the vote on the proposal
-        // governorBravo.castVote(proposalId, support ? 1 : 2);
-
-        // TODO: Update the state of the proposal locally
-    }
-
-    function claimVoteReward(uint proposalId) external onlyDelegate {
-        require(proposals[proposalId].active == false, "Proposal is still active");
-        require(proposals[proposalId].outcome > 0, "Delegate has not voted");
-
-        // Calculate and transfer rewards based on the outcome
-        uint256 rewards = proposals[proposalId].outcome == 1
-            ? proposals[proposalId].paymentFor
-            : proposals[proposalId].paymentAgainst;
-
-        claimedRewards[delegate] += rewards;
-
-        // Update reward index and last rewarded timestamp
-        rewardIndex += rewards;
-        lastRewarded = block.timestamp;
+        
+        emit RewardRateUpdate(delegate, newRate);
     }
 
     //////////////////////////
@@ -280,40 +209,6 @@ contract Compensator is ERC20 {
         // Update the last rewarded timestamp
         lastRewarded = block.timestamp;
     }
-
-
-    ////////////////////////////////
-    // Proposal Incentives Methods
-    ////////////////////////////////
-
-    /// @notice Allows a delegator to incentivize a proposal outcome with COMP
-    /// @param proposalId The ID of the COMP proposal to incentivize
-    /// @param support Whether to incentivize the for or against vote
-    /// @param amount The amount of COMP to incentivize with
-    function incentivize(uint proposalId, bool support, uint amount) external {
-        require(proposals[proposalId].active, "Proposal is not active");
-
-        // Transfer COMP from the delegator to the contract
-        // Assume ERC20 transfer function is available
-        compToken.transferFrom(msg.sender, address(this), amount);
-
-        // Update the payment information for the specified proposal
-        if (support) {
-            proposals[proposalId].paymentFor += amount;
-        } else {
-            proposals[proposalId].paymentAgainst += amount;
-        }
-    }
-
-    /// @notice Recover incentives from a proposal if the option incentivized was not the outcome
-    /// @param proposalId The ID of the COMP proposal to recover incentives from
-    function recoverIncentive(uint proposalId) external {
-        require(proposals[proposalId].active == false, "Proposal is still active");
-        require(proposals[proposalId].escrowUntil > block.timestamp, "Proposal is not yet resolved");
-
-        // Calculate and transfer rewards based on the outcome
-    }
-
 
     //////////////////////////
     // ERC20 Overrides
