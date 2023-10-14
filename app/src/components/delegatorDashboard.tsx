@@ -1,19 +1,144 @@
-import React from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import { ethers } from "ethers";
+import { useAccount, useContractRead } from "wagmi";
+import { approve, delegatorDeposit, delegatorWithdraw, claimRewards } from '../utils/compensator';
+import { formatTokenAmount } from '../utils/helpers';
+import {
+    COMPENSATOR_ADDRESS,
+    COMPENSATOR_ABI,
+    COMP_ADDRESS,
+    ERC20_ABI
+} from "../config/constants";
 
 const DelegatorDashboard = () => {
-    const handleClaim = () => {
-        // TODO
+    const { address } = useAccount();
 
+    const [delegated, setDelegated] = useState('');
+    const [pendingRewards, setPendingRewards] = useState('');
+    const [compAllowance, setCompAllowance] = useState('');
+    const [compBalance, setCompBalance] = useState('');
+    const [approveLoading, setApproveLoading] = useState(false);
+    const [depositLoading, setDepositLoading] = useState(false);
+    const [withdrawLoading, setWithdrawLoading] = useState(false);
+    const [claimLoading, setClaimLoading] = useState(false);
+
+    const [depositInput, setDepositInput] = useState('');
+    const [withdrawInput, setWithdrawInput] = useState('');
+
+    // Get the allowance of COMPENSATOR_ADDRESS to spend the user's COMP tokens
+    const compAllowanceData = useContractRead({
+        addressOrName: COMP_ADDRESS,
+        contractInterface: ERC20_ABI,
+        functionName: 'allowance',
+        args: [address, COMPENSATOR_ADDRESS],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (compAllowanceData.data) {
+            setCompAllowance(formatTokenAmount(compAllowanceData.data.toString(), 18, 2));
+        }
+    }, [compAllowanceData.data]);
+
+    // Get the amount of COMP in the Delegator contract
+    const delegatedBalanceData = useContractRead({
+        addressOrName: COMPENSATOR_ADDRESS,
+        contractInterface: ERC20_ABI,
+        functionName: 'totalSupply',
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (delegatedBalanceData.data) {
+            setDelegated(formatTokenAmount(delegatedBalanceData.data.toString(), 18, 2));
+        }
+    }, [delegatedBalanceData.data]);
+
+    // Get the pending rewards from the Compensator contract
+    const pendingRewardsData = useContractRead({
+        addressOrName: COMPENSATOR_ADDRESS,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'getPendingRewards',
+        args: [address],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (pendingRewardsData.data) {
+            console.log("pendingRewardsData.data.toString()", pendingRewardsData.data.toString());
+            setPendingRewards(formatTokenAmount(pendingRewardsData.data.toString(), 18, 6));
+        }
+    }, [pendingRewardsData.data]);
+
+    // Get the COMP balance of the user
+    const compBalanceData = useContractRead({
+        addressOrName: COMP_ADDRESS,
+        contractInterface: ERC20_ABI,
+        functionName: 'balanceOf',
+        args: [address],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (compBalanceData.data) {
+            setCompBalance(formatTokenAmount(compBalanceData.data.toString(), 18, 2));
+        }
+    }, [compBalanceData.data]);
+
+    const handleApproveCOMP = async () => {
+        try {
+            setApproveLoading(true);
+            await approve(COMP_ADDRESS);
+            toast.success('COMP approved!');
+        } catch (error) {
+            toast.error('Error approving COMP');
+            console.log(error);
+        } finally {
+            setApproveLoading(false);
+        }
     };
 
-    const handleDeposit = () => {
-        // TODO
-    }
+    const handleDelegatorDeposit = async () => {
+        try {
+            const amount = ethers.utils.parseEther(depositInput);
+            setDepositLoading(true);
+            await delegatorDeposit(amount);
+            toast.success('Deposit successful!');
+        } catch (error) {
+            toast.error('Error depositing COMP');
+            console.log(error);
+        } finally {
+            setDepositLoading(false);
+        }
+    };
 
-    const handleWithdraw = () => {
-        // TODO
-    }
+    const handleDelegatorWithdraw = async () => {
+        try {
+            const amount = ethers.utils.parseEther(withdrawInput);
+            setWithdrawLoading(true);
+            await delegatorWithdraw(amount);
+            toast.success('Withdrawal successful!');
+        } catch (error) {
+            toast.error('Error withdrawing COMP');
+            console.log(error);
+        } finally {
+            setWithdrawLoading(false);
+        }
+    };
+
+    const handleClaimRewards = async () => {
+        try {
+            setClaimLoading(true);
+            await claimRewards();
+            toast.success('Claim successful!');
+        } catch (error) {
+            toast.error('Error claiming rewards');
+            console.log(error);
+        } finally {
+            setClaimLoading(false);
+        }
+    };
 
     return (
         <div className="container">
@@ -23,10 +148,9 @@ const DelegatorDashboard = () => {
                     <div className="card">
                         <div className="card-header">Delegator Statistics</div>
                         <div className="card-body">
-                            <p><strong>Delegated:</strong> 350 COMP (14%)</p>
-                            <p><strong>Pending Rewards:</strong> 0.813 COMP</p>
-                            <p><strong>Reward Rate:</strong> 0.174 COMP/month</p>
-                            <p><strong>Rewards Until:</strong> November 12, 2024</p>
+                            <p><strong>Delegated:</strong> {delegated} COMP</p>
+                            <p><strong>Pending Rewards:</strong> {pendingRewards} COMP</p>
+                            <p><strong>COMP Balance:</strong> {compBalance} COMP</p>
                         </div>
                     </div>
                 </div>
@@ -34,26 +158,52 @@ const DelegatorDashboard = () => {
                     <div className="card">
                         <div className="card-header">Manage Delegation</div>
                         <div className="card-body">
-                            <button className="btn btn-primary" onClick={handleClaim}>
-                                Claim 0.813 COMP
-                            </button>
-                            <br/>
-                            <br/>
-                            <div className="form-group">
-                                <label htmlFor="descriptionInput">Deposit Rewards</label>
-                                <input type="text" className="form-control" id="descriptionInput" />
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
+                                <div className="input-group-append">
+                                    <span className="input-group-text">COMP</span>
+                                </div>
                             </div>
-                            <button className="btn btn-primary" onClick={handleDeposit}>
-                                Deposit
+                            {Number(compAllowance) > 0 ? (
+                                <button className="btn btn-primary" onClick={handleDelegatorDeposit}>
+                                    {depositLoading ? (
+                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    ) : (
+                                        'Deposit'
+                                    )}
+                                </button>
+                            ) : (
+                                <button className="btn btn-primary" onClick={handleApproveCOMP}>
+                                    {approveLoading ? (
+                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    ) : (
+                                        'Approve'
+                                    )}
+                                </button>
+                            )}
+                            <br />
+                            <br />
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
+                                <div className="input-group-append">
+                                    <span className="input-group-text">COMP</span>
+                                </div>
+                            </div>
+                            <button className="btn btn-primary" onClick={handleDelegatorWithdraw}>
+                                {withdrawLoading ? (
+                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                ) : (
+                                    'Withdraw'
+                                )}
                             </button>
                             <br />
                             <br />
-                            <div className="form-group">
-                                <label htmlFor="descriptionInput">Withdraw Rewards</label>
-                                <input type="text" className="form-control" id="descriptionInput" />
-                            </div>
-                            <button className="btn btn-primary" onClick={handleWithdraw}>
-                                Withdraw
+                            <button className="btn btn-primary" onClick={handleClaimRewards}>
+                                {claimLoading ? (
+                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                ) : (
+                                    'Claim Rewards'
+                                )}
                             </button>
                         </div>
                     </div>
@@ -64,5 +214,3 @@ const DelegatorDashboard = () => {
 };
 
 export default DelegatorDashboard;
-
-

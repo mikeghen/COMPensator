@@ -72,3 +72,55 @@ export const setRewardRate = async (newRate: BigNumber) => {
     const setRewardRateTx = await contract.setRewardRate(newRate);
     await setRewardRateTx.wait();
 };
+
+export const delegatorDeposit = async (amount: BigNumber) => {
+    const provider = await getProvider();
+    const signer = await getSigner(provider);
+    const contract = new ethers.Contract(
+        COMPENSATOR_ADDRESS,
+        COMPENSATOR_ABI,
+        signer
+    );
+
+    const depositTx = await contract.delegatorDeposit(amount);
+    await depositTx.wait();
+};
+
+export const delegatorWithdraw = async (amount: BigNumber) => {
+    const provider = await getProvider();
+    const signer = await getSigner(provider);
+    const contract = new ethers.Contract(
+        COMPENSATOR_ADDRESS,
+        COMPENSATOR_ABI,
+        signer
+    );
+
+    const withdrawTx = await contract.delegatorWithdraw(amount);
+    await withdrawTx.wait();
+};
+
+export const claimRewards = async () => {
+    const provider = await getProvider();
+    const signer = await getSigner(provider);
+    const contract = new ethers.Contract(
+        COMPENSATOR_ADDRESS,
+        COMPENSATOR_ABI,
+        signer
+    );
+
+    const claimRewardsTx = await contract.claimRewards();
+    await claimRewardsTx.wait();
+};
+
+export const getPendingRewards = async (delegator: string) => {
+    const provider = await getProvider();
+    const signer = await getSigner(provider);
+    const contract = new ethers.Contract(
+        COMPENSATOR_ADDRESS,
+        COMPENSATOR_ABI,
+        signer
+    );
+
+    const pendingRewards = await contract.getPendingRewards(delegator);
+    return pendingRewards;
+};
