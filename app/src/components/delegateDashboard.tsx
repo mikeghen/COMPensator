@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ethers } from "ethers";
+import { useAccount, useContractRead } from "wagmi";
+import { 
+    COMPENSATOR_ADDRESS, 
+    COMPENSATOR_ABI, 
+    COMP_ADDRESS, 
+    ERC20_ABI } from "../config/constants";
+
 
 
 const DelegateDashboard = () => {
+    const [delegated, setDelegated] = useState(350);
+    const [availableRewards, setAvailableRewards] = useState(82.345);
+    const [rewardRate, setRewardRate] = useState(10);
+    const [rewardsUntil, setRewardsUntil] = useState('November 12, 2024');
 
     const handleDeposit = () => {
         // TODO
@@ -23,10 +35,10 @@ const DelegateDashboard = () => {
                     <div className="card">
                         <div className="card-header">Delegate Statistics</div>
                         <div className="card-body">
-                            <p><strong>Delegated:</strong> 350 COMP</p>
-                            <p><strong>Available Rewards:</strong> 82.345 COMP</p>
-                            <p><strong>Reward Rate:</strong> 10 COMP/month</p>
-                            <p><strong>Rewards Until:</strong> November 12, 2024</p>
+                            <p><strong>Delegated:</strong> {delegated} COMP</p>
+                            <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
+                            <p><strong>Reward Rate:</strong> {rewardRate} COMP/month</p>
+                            <p><strong>Rewards Until:</strong> {rewardsUntil}</p>
                         </div>
                     </div>
                 </div>
@@ -57,7 +69,7 @@ const DelegateDashboard = () => {
                                 <input type="text" className="form-control" id="descriptionInput" />
                             </div>
                             <button className="btn btn-primary" onClick={handleSetRewardRate}>
-                                Withdraw
+                                Set Reward Rate
                             </button>
                         </div>
                     </div>
