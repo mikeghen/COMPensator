@@ -90,6 +90,15 @@ contract Compensator is ERC20 {
         return lastRewarded + remainingRewardsTime;
     }
 
+    /// @notice Returns the amount of pending rewards for the delegator
+    /// @param delegator The address of the delegator
+    /// @return The total amount of rewards available to be claimed by delegators
+    function getPendingRewards(address delegator) external view returns (uint256) {
+        // Are there enough rewards?
+        uint currIndex = _getCurrentRewardsIndex();
+        return balanceOf(delegator) * (currIndex - startRewardIndex[delegator]) / 1e18;
+    }
+
     //////////////////////////
     // Delegate/Owner Methods
     //////////////////////////
@@ -182,21 +191,6 @@ contract Compensator is ERC20 {
         emit ClaimRewards(msg.sender, pendingRewards);
     }
 
-    /// @notice Returns the amount of pending rewards for the delegator
-    /// @param delegator The address of the delegator
-    /// @return The total amount of rewards available to be claimed by delegators
-    function getPendingRewards(address delegator) external view returns (uint256) {
-        // Are there enough rewards?
-        uint supply = totalSupply();
-        uint indexChange = rewardIndex - startRewardIndex[delegator];
-        uint totalRewards = supply * indexChange / 1e18;
-        if(totalRewards > availableRewards) {
-            totalRewards = availableRewards;
-            return totalRewards * balanceOf(delegator) / supply;
-        }
-        return balanceOf(msg.sender) * indexChange / 1e18;
-    }
-
     /// @notice Update the reward index based on how much time has passed and the rewards rate
     function _updateRewardsIndex() internal {
         // How much time has passed since the last update?
@@ -221,6 +215,18 @@ contract Compensator is ERC20 {
 
         // Update the last rewarded timestamp
         lastRewarded = block.timestamp;
+    }
+
+    /// @notice Returns the current rewards index, adjusted for time since last rewarded
+    function _getCurrentRewardsIndex() internal view returns (uint256) {
+        uint256 timeDelta = block.timestamp - lastRewarded;
+        uint256 rewards = timeDelta * rewardRate;
+        uint supply = totalSupply();
+        if(supply > 0) {
+            return rewardIndex + rewards * 1e18 / supply;
+        } else {
+            return rewardIndex;
+        }
     }
 
     //////////////////////////
