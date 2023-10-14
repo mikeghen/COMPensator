@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import "./interfaces/IComp.sol";
 import "./interfaces/IGovernorBravo.sol";
@@ -8,8 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Compensator is ERC20 {
     using SafeERC20 for IComp;
-
-
 
     //////////////////////////
     // Variables

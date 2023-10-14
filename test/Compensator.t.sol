@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Compensator} from "../src/Compensator.sol";
-import {IComp} from "../src/interfaces/IComp.sol";
-import {IGovernorBravo} from "../src/interfaces/IGovernorBravo.sol";
+import {Compensator} from "../contracts/Compensator.sol";
+import {IComp} from "../contracts/interfaces/IComp.sol";
+import {IGovernorBravo} from "../contracts/interfaces/IGovernorBravo.sol";
 
 contract CompensatorTest is Test {
     address internal constant COMP_TOKEN_ADDRESS = 0xc00e94Cb662C3520282E6f5717214004A7f26888;
