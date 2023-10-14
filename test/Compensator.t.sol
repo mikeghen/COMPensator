@@ -32,6 +32,20 @@ contract CompensatorTest is Test {
     }
 }
 
+contract CompensatorViewsTest is CompensatorTest {
+    function test_rewardsUntil() public {
+        // Add rewards until 100 seconds from now
+        vm.startPrank(delegate);
+        compToken.approve(address(compensator), 100 ether);
+        compensator.delegateDeposit(100 ether);
+        compensator.setRewardRate(1 ether);
+        vm.stopPrank();
+
+        assertEq(compensator.rewardsUntil(), block.timestamp + 100);
+    }
+
+}
+
 contract CompensatorDelegateTest is CompensatorTest {
 
     function test_setRewardRate() public {

@@ -76,6 +76,21 @@ contract Compensator is ERC20 {
     }
 
     //////////////////////////
+    // View Methods
+    //////////////////////////
+
+    /// @notice Calculates the timestamp where rewards will be distributed until
+    /// using the rewardsRate and availableRewards
+    /// @return until The timestamp where rewards will be distributed until
+    function rewardsUntil() external view returns (uint256) {
+        if (rewardRate == 0) {
+            return block.timestamp;
+        }
+        uint256 remainingRewardsTime = availableRewards / rewardRate;
+        return lastRewarded + remainingRewardsTime;
+    }
+
+    //////////////////////////
     // Delegate/Owner Methods
     //////////////////////////
 

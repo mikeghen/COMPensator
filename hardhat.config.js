@@ -4,8 +4,20 @@ tdly.setup();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
   networks: {
+    tenderly: {
+      url: `${process.env.TENDERLY_RPC_URL}`,
+      accounts: [`${process.env.PRIVATE_KEY}`]
+    },
     ethereum: {
       url: `${process.env.ETHEREUM_NODE_URL}`,
       accounts: [`${process.env.PRIVATE_KEY}`]
