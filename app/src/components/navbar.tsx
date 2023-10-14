@@ -17,23 +17,23 @@ const Navbar = ({
 IProps) => {
   return (
     <nav className="flex justify-between w-full py-8">
-      <div className="container-fluid flex space-x-2">
+      <div className="container-fluid flex justify-between space-x-2">
         {/* Logo */}
         <div className="ml-1 transition duration-200 transform hover:rotate-20">
           <Link href="/">
-            <h1 className="text-2xl text-dark font-bold mr-auto"><span className="rotating-hue">🎈</span> COMPensator</h1>
+            <h1 className="text-2xl text-dark font-bold"><span className="rotating-hue">🎈</span> COMPensator</h1>
           </Link>
         </div>
 
         {/* Navigation links */}
-        <ul className="flex items-center space-x-4">
+        <ul className="flex items-center space-x-4 mx-auto">
           <li>
-            <Link href="/Delegate">
+            <Link href="/delegate">
               <a>Delegate</a>
             </Link>
           </li>
           <li>
-            <Link href="/Delegator">
+            <Link href="/delegator">
               <a>Delegator</a>
             </Link>
           </li>

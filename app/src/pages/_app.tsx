@@ -9,16 +9,21 @@ import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { chain, configureChains, createClient, WagmiConfig } from 'wagmi'
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public'
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 
-import config from '../config/env-vars'
-const { NEXT_PUBLIC_ALCHEMY_ID, NEXT_PUBLIC_INFURA_ID, NEXT_PUBLIC_ETHERSCAN_API_KEY } = config
 
-const alchemyId = NEXT_PUBLIC_ALCHEMY_ID
-const etherscanApiKey = NEXT_PUBLIC_ETHERSCAN_API_KEY
 
+
+// TODO: https://github.com/ethers-io/ethers.js/issues/169
 const { chains, provider } = configureChains(
   [chain.mainnet],
-  [alchemyProvider({ apiKey: alchemyId }), publicProvider()],
+  [
+    jsonRpcProvider({
+      rpc: (chain) => ({
+        http: "https://rpc.tenderly.co/fork/e71d614f-c0c3-4687-9a9d-32991fc5af21",
+      }),
+    }),
+  ],
 )
 const { connectors } = getDefaultWallets({
   appName: 'Web 3 Starter App',
