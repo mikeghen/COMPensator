@@ -33,11 +33,6 @@ IProps) => {
             </Link>
           </li>
           <li>
-            <Link href="/delegator">
-              <a>Delegator</a>
-            </Link>
-          </li>
-          <li>
             <Link href="/delegateList">
               <a>Delegate List</a>
             </Link>

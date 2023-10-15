@@ -1,10 +1,8 @@
 import { BigNumber, ethers } from 'ethers';
 import { 
-    COMPENSATOR_ADDRESS, 
     COMPENSATOR_FACTORY_ADDRESS,
     COMPENSATOR_ABI, 
     COMPENSATOR_FACTORY_ABI,
-    COMP_ADDRESS, 
     ERC20_ABI 
 } from '../config/constants'; 
 
@@ -21,7 +19,7 @@ export const getSigner = (provider: ethers.providers.Web3Provider) => {
     return provider.getSigner();
 };
 
-export const approve = async (depositToken: string) => {
+export const approve = async (depositToken: string, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
@@ -32,15 +30,15 @@ export const approve = async (depositToken: string) => {
 
     // TODO: No max approval
     const maxApprovalAmount = ethers.constants.MaxUint256;
-    const approvalTx = await contract.approve(COMPENSATOR_ADDRESS, maxApprovalAmount);
+    const approvalTx = await contract.approve(compensatorAddress, maxApprovalAmount);
     await approvalTx.wait();
 };
 
-export const delegateDeposit = async (amount: BigNumber) => {
+export const delegateDeposit = async (amount: BigNumber, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -49,11 +47,11 @@ export const delegateDeposit = async (amount: BigNumber) => {
     await depositTx.wait();
 };
 
-export const delegateWithdraw = async (amount: BigNumber) => {
+export const delegateWithdraw = async (amount: BigNumber, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -62,11 +60,11 @@ export const delegateWithdraw = async (amount: BigNumber) => {
     await withdrawTx.wait();
 };
 
-export const setRewardRate = async (newRate: BigNumber) => {
+export const setRewardRate = async (newRate: BigNumber, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -75,11 +73,11 @@ export const setRewardRate = async (newRate: BigNumber) => {
     await setRewardRateTx.wait();
 };
 
-export const delegatorDeposit = async (amount: BigNumber) => {
+export const delegatorDeposit = async (amount: BigNumber, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -88,11 +86,11 @@ export const delegatorDeposit = async (amount: BigNumber) => {
     await depositTx.wait();
 };
 
-export const delegatorWithdraw = async (amount: BigNumber) => {
+export const delegatorWithdraw = async (amount: BigNumber, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -101,11 +99,11 @@ export const delegatorWithdraw = async (amount: BigNumber) => {
     await withdrawTx.wait();
 };
 
-export const claimRewards = async () => {
+export const claimRewards = async (compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );
@@ -114,11 +112,11 @@ export const claimRewards = async () => {
     await claimRewardsTx.wait();
 };
 
-export const getPendingRewards = async (delegator: string) => {
+export const getPendingRewards = async (delegator: string, compensatorAddress: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
-        COMPENSATOR_ADDRESS,
+        compensatorAddress,
         COMPENSATOR_ABI,
         signer
     );

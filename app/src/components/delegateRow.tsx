@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useContractRead } from "wagmi";
 import { formatTokenAmount } from '../utils/helpers';
 import { COMPENSATOR_ABI, ERC20_ABI, COMP_ADDRESS } from "../config/constants";
+import DelegatorDashboard from './delegatorDashboard';
 
-const DelegateRow = ({ compensatorAddress }) => {
+const DelegateRow = ({ compensatorAddress, onDelegateClick }) => {
     const [delegated, setDelegated] = useState('');
     const [delegate, setDelegate] = useState('');
     const [delegateName, setDelegateName] = useState('');
@@ -66,10 +67,19 @@ const DelegateRow = ({ compensatorAddress }) => {
             const rewardRatePerMonth = rewardRateData.data.mul(60).mul(60).mul(24).mul(30);
             setRewardRate(formatTokenAmount(rewardRatePerMonth.toString(), 18, 2));
             // Compute and set the reward per month per COMP delegated
-            const rewardPerMonthPerComp = delegatedBalanceData.data.isZero() ? 0 : rewardRatePerMonth.div(delegatedBalanceData.data);
-            setRewardPerMonthPerComp(formatTokenAmount(rewardPerMonthPerComp.toString(), 18, 2));
+            if(Number(delegated) === 0) {
+                setRewardPerMonthPerComp('0');
+                return;
+            } else {
+                const rewardPerMonthPerComp = rewardRatePerMonth.div(Number(delegated));
+                setRewardPerMonthPerComp(formatTokenAmount(rewardPerMonthPerComp.toString(), 18, 2));
+            }
         }
     }, [rewardRateData.data, delegatedBalanceData.data]);
+
+    const handleDelegateClick = () => {
+        onDelegateClick(compensatorAddress);
+    };
 
     return (
         <tr>
@@ -78,9 +88,10 @@ const DelegateRow = ({ compensatorAddress }) => {
             <td>{delegated} COMP</td>
             <td>{rewardRate} COMP/month</td>
             <td>{rewardPerMonthPerComp} /COMP/month</td>
-            <td><button className="btn btn-primary">Delegate</button></td>
+            <td><button className="btn btn-primary" onClick={handleDelegateClick}>Delegate</button></td>
         </tr>
     );
 };
 
 export default DelegateRow;
+

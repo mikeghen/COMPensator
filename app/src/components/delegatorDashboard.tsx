@@ -5,7 +5,6 @@ import { useAccount, useContractRead } from "wagmi";
 import { approve, delegatorDeposit, delegatorWithdraw, claimRewards } from '../utils/compensator';
 import { formatTokenAmount } from '../utils/helpers';
 import {
-    COMPENSATOR_ADDRESS,
     COMPENSATOR_FACTORY_ADDRESS,
     COMPENSATOR_FACTORY_ABI,
     COMPENSATOR_ABI,
@@ -13,7 +12,7 @@ import {
     ERC20_ABI
 } from "../config/constants";
 
-const DelegatorDashboard = () => {
+const DelegatorDashboard = ({ compensatorAddress }) => {
     const { address } = useAccount();
 
     const [delegated, setDelegated] = useState('');
@@ -49,7 +48,7 @@ const DelegatorDashboard = () => {
         addressOrName: COMP_ADDRESS,
         contractInterface: ERC20_ABI,
         functionName: 'allowance',
-        args: [address, COMPENSATOR_ADDRESS],
+        args: [address, compensatorAddress],
         watch: true,
     });
 
@@ -61,7 +60,7 @@ const DelegatorDashboard = () => {
 
     // Get the amount of COMP in the Delegator contract
     const delegatedBalanceData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: ERC20_ABI,
         functionName: 'totalSupply',
         watch: true,
@@ -75,7 +74,7 @@ const DelegatorDashboard = () => {
 
     // Get the pending rewards from the Compensator contract
     const pendingRewardsData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: COMPENSATOR_ABI,
         functionName: 'getPendingRewards',
         args: [address],
@@ -87,7 +86,7 @@ const DelegatorDashboard = () => {
             console.log("pendingRewardsData.data.toString()", pendingRewardsData.data.toString());
             setPendingRewards(formatTokenAmount(pendingRewardsData.data.toString(), 18, 6));
         }
-    }, [pendingRewardsData.data]);
+    }, [pendingRewardsData.data, address]);
 
     // Get the COMP balance of the user
     const compBalanceData = useContractRead({
@@ -107,7 +106,7 @@ const DelegatorDashboard = () => {
     const handleApproveCOMP = async () => {
         try {
             setApproveLoading(true);
-            await approve(COMP_ADDRESS);
+            await approve(COMP_ADDRESS, compensatorAddress);
             toast.success('COMP approved!');
         } catch (error) {
             toast.error('Error approving COMP');
@@ -121,7 +120,7 @@ const DelegatorDashboard = () => {
         try {
             const amount = ethers.utils.parseEther(depositInput);
             setDepositLoading(true);
-            await delegatorDeposit(amount);
+            await delegatorDeposit(amount, compensatorAddress);
             toast.success('Deposit successful!');
         } catch (error) {
             toast.error('Error depositing COMP');
@@ -135,7 +134,7 @@ const DelegatorDashboard = () => {
         try {
             const amount = ethers.utils.parseEther(withdrawInput);
             setWithdrawLoading(true);
-            await delegatorWithdraw(amount);
+            await delegatorWithdraw(amount, compensatorAddress);
             toast.success('Withdrawal successful!');
         } catch (error) {
             toast.error('Error withdrawing COMP');
@@ -148,7 +147,7 @@ const DelegatorDashboard = () => {
     const handleClaimRewards = async () => {
         try {
             setClaimLoading(true);
-            await claimRewards();
+            await claimRewards(compensatorAddress);
             toast.success('Claim successful!');
         } catch (error) {
             toast.error('Error claiming rewards');

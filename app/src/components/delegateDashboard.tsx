@@ -146,7 +146,7 @@ const DelegateDashboard = () => {
     const handleApproveCOMP = async () => {
         try {
             setApproveLoading(true);
-            await approve(COMP_ADDRESS);
+            await approve(COMP_ADDRESS, compensatorAddress);
             toast.success('COMP approved!');
         } catch (error) {
             toast.error('Error approving COMP');
@@ -160,7 +160,7 @@ const DelegateDashboard = () => {
         try {
             const amount = ethers.utils.parseEther(depositInput);
             setDepositLoading(true);
-            await delegateDeposit(amount);
+            await delegateDeposit(amount, compensatorAddress);
             toast.success('Deposit successful!');
         } catch (error) {
             toast.error('Error depositing COMP');
@@ -174,7 +174,7 @@ const DelegateDashboard = () => {
         try {
             const amount = ethers.utils.parseEther(withdrawInput);
             setWithdrawLoading(true);
-            await delegateWithdraw(amount);
+            await delegateWithdraw(amount, compensatorAddress);
             toast.success('Withdrawal successful!');
         } catch (error) {
             toast.error('Error withdrawing COMP');
@@ -192,7 +192,7 @@ const DelegateDashboard = () => {
             const newRatePerSecond = newRatePerMonth.div(secondsInAMonth);
 
             setRewardRateLoading(true);
-            await setRewardRate(newRatePerSecond);
+            await setRewardRate(newRatePerSecond, compensatorAddress);
             toast.success('Reward rate set successfully!');
         } catch (error) {
             toast.error('Error setting reward rate');
