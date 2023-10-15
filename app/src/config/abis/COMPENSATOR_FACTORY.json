@@ -1,0 +1,54 @@
+[
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCompensators",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "delegatee",
+                "type": "address"
+            }
+        ],
+        "name": "getCompensator",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "delegatee",
+                "type": "address"
+            }
+        ],
+        "name": "createCompensator",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

@@ -2,21 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { ethers, BigNumber } from "ethers";
 import { useAccount, useContractRead } from "wagmi";
-import { approve, delegateDeposit, delegateWithdraw, setRewardRate } from '../utils/compensator';
+import { approve, delegateDeposit, delegateWithdraw, setRewardRate, createCompensator } from '../utils/compensator';
 import { formatTokenAmount } from '../utils/helpers';
 import {
     COMPENSATOR_ADDRESS,
+    COMPENSATOR_FACTORY_ADDRESS,
+    COMPENSATOR_FACTORY_ABI,
     COMPENSATOR_ABI,
     COMP_ADDRESS,
     ERC20_ABI
 } from "../config/constants";
 
 
-
 const DelegateDashboard = () => {
 
     const { address } = useAccount();
 
+    const [compensatorAddress, setCompensatorAddress] = useState('');
     const [delegated, setDelegated] = useState('');
     const [userCompBalance, setUserCompBalance] = useState('');
     const [availableRewards, setAvailableRewards] = useState('');
@@ -32,12 +34,30 @@ const DelegateDashboard = () => {
     const [withdrawInput, setWithdrawInput] = useState('');
     const [rewardRateInput, setRewardRateInput] = useState('');
 
+    // Check if the user has a compensator contract
+    const compensatorAddressData = useContractRead({
+        addressOrName: COMPENSATOR_FACTORY_ADDRESS,
+        contractInterface: COMPENSATOR_FACTORY_ABI,
+        functionName: 'getCompensator',
+        args: [address],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (compensatorAddressData.data) {
+            if (compensatorAddressData.data.toString() !== ethers.constants.AddressZero) {
+                // If the user has a compensator contract, set the compensator address
+                setCompensatorAddress(compensatorAddressData.data.toString());
+            }
+        }
+    }, [compensatorAddressData.data]);
+
     // Get the allowance of COMPENSATOR_ADDRESS to spend the user's COMP tokens
     const compAllowanceData = useContractRead({
         addressOrName: COMP_ADDRESS,
         contractInterface: ERC20_ABI,
         functionName: 'allowance',
-        args: [address, COMPENSATOR_ADDRESS],
+        args: [address, compensatorAddress],
         watch: true,
     });
 
@@ -49,7 +69,7 @@ const DelegateDashboard = () => {
 
     // Get the amount of COMP in the Delegator contract
     const delegatedBalanceData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: ERC20_ABI,
         functionName: 'totalSupply',
         watch: true,
@@ -78,7 +98,7 @@ const DelegateDashboard = () => {
 
     // Get the available rewards from the Compensator contract
     const availableRewardsData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: COMPENSATOR_ABI,
         functionName: 'availableRewards',
         watch: true,
@@ -92,7 +112,7 @@ const DelegateDashboard = () => {
 
     // Get the reward rate from the Compensator contract
     const rewardRateData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: COMPENSATOR_ABI,
         functionName: 'rewardRate',
         watch: true,
@@ -108,7 +128,7 @@ const DelegateDashboard = () => {
 
     // Get the rewards until from the Compensator contract
     const rewardsUntilData = useContractRead({
-        addressOrName: COMPENSATOR_ADDRESS,
+        addressOrName: compensatorAddress,
         contractInterface: COMPENSATOR_ABI,
         functionName: 'rewardsUntil',
         watch: true,
@@ -181,95 +201,122 @@ const DelegateDashboard = () => {
         }
     };
 
+    const handleCreateCompensator = async () => {
+        try {
+            setApproveLoading(true);
+            await createCompensator(address);
+            toast.success('Compensator contract created successfully!');
+        } catch (error) {
+            toast.error('Error creating compensator contract');
+            console.log(error);
+        } finally {
+            setApproveLoading(false);
+        }
+    };
+
     return (
         <div className="container">
-            <h2>Delegate Dashboard</h2><br />
-            <div className="row">
-                <div className="col-md-6 mb-4 mb-md-0">
-                    <div className="card">
-                        <div className="card-header">Delegate Statistics</div>
-                        <div className="card-body">
-                            <p><strong>Delegated:</strong> {delegated} COMP</p>
-                            <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
-                            <p><strong>Reward Rate:</strong> {compRewardRate} COMP/month</p>
-                            <p><strong>Rewards Until:</strong> {rewardsUntil}</p>
+            {compensatorAddress === '' ? (
+
+                <div className="card">
+                    <div className="card-header">Create Compensator Contract</div>
+                    <div className="card-body">
+                        <p>You do not have a compensator contract yet. Click the button below to create one.</p>
+                        <button className="btn btn-primary" onClick={handleCreateCompensator}>Create Compensator Contract</button>
+                    </div>
+                </div>
+            ) : (
+                <div className="container">
+                    <h2>Delegate Dashboard</h2><br />
+                    <div className="row">
+                        <div className="col-md-6 mb-4 mb-md-0">
+                            <div className="card">
+                                <div className="card-header">Delegate Statistics</div>
+                                <div className="card-body">
+                                    <p><strong>Compensator Address:</strong> {compensatorAddress}</p>
+                                    <p><strong>Delegated:</strong> {delegated} COMP</p>
+                                    <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
+                                    <p><strong>Reward Rate:</strong> {compRewardRate} COMP/month</p>
+                                    <p><strong>Rewards Until:</strong> {rewardsUntil}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 mb-4 mb-md-0">
+                            <div className="card">
+                                <div className="card-header">Manage Delegator Rewards</div>
+                                <div className="card-body">
+                                    <p><strong>COMP Balance:</strong> {userCompBalance} COMP</p>
+                                    <div className="input-group mb-3">
+                                        <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
+                                        <div className="input-group-append">
+                                            <span className="input-group-text">COMP</span>
+                                        </div>
+                                    </div>
+                                    {Number(compAllowance) > 0 ? (
+                                        <button className="btn btn-primary" onClick={handleDelegateDeposit}>
+                                            {depositLoading ? (
+                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            ) : (
+                                                'Deposit'
+                                            )}
+                                        </button>
+                                    ) : (
+                                        <button className="btn btn-primary" onClick={handleApproveCOMP}>
+                                            {approveLoading ? (
+                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            ) : (
+                                                'Approve'
+                                            )}
+                                        </button>
+                                    )}
+                                    <br />
+                                    <br />
+                                    <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
+                                    <div className="input-group mb-3">
+                                        <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
+                                        <div className="input-group-append">
+                                            <span className="input-group-text">COMP</span>
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-primary" onClick={handleDelegateWithdraw}>
+                                        {withdrawLoading ? (
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        ) : (
+                                            'Withdraw'
+                                        )}
+                                    </button>
+                                    <br />
+                                    <br />
+                                    <p><strong>Rewards Rate:</strong> {compRewardRate} COMP/month</p>
+                                    <div className="input-group mb-3">
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="rewardRateInput"
+                                            value={rewardRateInput}
+                                            onChange={e => setRewardRateInput(e.target.value)}
+                                        />
+                                        <div className="input-group-append">
+                                            <span className="input-group-text">/month</span>
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-primary" onClick={handleSetRewardRate}>
+                                        {rewardRateLoading ? (
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        ) : (
+                                            'Set Reward Rate'
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className="col-md-6 mb-4 mb-md-0">
-                    <div className="card">
-                        <div className="card-header">Manage Delegator Rewards</div>
-                        <div className="card-body">
-                            <p><strong>COMP Balance:</strong> {userCompBalance} COMP</p>
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
-                                <div className="input-group-append">
-                                    <span className="input-group-text">COMP</span>
-                                </div>
-                            </div>
-                            {Number(compAllowance) > 0 ? (
-                                <button className="btn btn-primary" onClick={handleDelegateDeposit}>
-                                    {depositLoading ? (
-                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    ) : (
-                                        'Deposit'
-                                    )}
-                                </button>
-                            ) : (
-                                <button className="btn btn-primary" onClick={handleApproveCOMP}>
-                                    {approveLoading ? (
-                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    ) : (
-                                        'Approve'
-                                    )}
-                                </button>
-                            )}
-                            <br />
-                            <br />
-                            <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
-                                <div className="input-group-append">
-                                    <span className="input-group-text">COMP</span>
-                                </div>
-                            </div>
-                            <button className="btn btn-primary" onClick={handleDelegateWithdraw}>
-                                {withdrawLoading ? (
-                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                ) : (
-                                    'Withdraw'
-                                )}
-                            </button>
-                            <br />
-                            <br />
-                            <p><strong>Rewards Rate:</strong> {compRewardRate} COMP/month</p>
-                            <div className="input-group mb-3">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    id="rewardRateInput"
-                                    value={rewardRateInput}
-                                    onChange={e => setRewardRateInput(e.target.value)}
-                                />
-                                <div className="input-group-append">
-                                    <span className="input-group-text">/month</span>
-                                </div>
-                            </div>
-                            <button className="btn btn-primary" onClick={handleSetRewardRate}>
-                                {rewardRateLoading ? (
-                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                ) : (
-                                    'Set Reward Rate'
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            )}
         </div>
     );
 };
 
-export default DelegateDashboard;
+            export default DelegateDashboard;
 
 

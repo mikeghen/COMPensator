@@ -1,7 +1,9 @@
 import { BigNumber, ethers } from 'ethers';
 import { 
     COMPENSATOR_ADDRESS, 
+    COMPENSATOR_FACTORY_ADDRESS,
     COMPENSATOR_ABI, 
+    COMPENSATOR_FACTORY_ABI,
     COMP_ADDRESS, 
     ERC20_ABI 
 } from '../config/constants'; 
@@ -123,4 +125,17 @@ export const getPendingRewards = async (delegator: string) => {
 
     const pendingRewards = await contract.getPendingRewards(delegator);
     return pendingRewards;
+};
+
+export const createCompensator = async (delegate: string) => {
+    const provider = await getProvider();
+    const signer = await getSigner(provider);
+    const contract = new ethers.Contract(
+        COMPENSATOR_FACTORY_ADDRESS,
+        COMPENSATOR_FACTORY_ABI,
+        signer
+    );
+
+    const createCompensatorTx = await contract.createCompensator(delegate);
+    await createCompensatorTx.wait();
 };
