@@ -5,8 +5,9 @@ import "./interfaces/IComp.sol";
 import "./interfaces/IGovernorBravo.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract Compensator is ERC20 {
+contract Compensator is ERC20, Initializable {
     using SafeERC20 for IComp;
 
     //////////////////////////
@@ -21,6 +22,9 @@ contract Compensator is ERC20 {
 
     /// @notice The address of the delegate
     address public delegate;
+
+    /// @notice The name selected by this delegate when they registered
+    string public delegateName;
 
     /// @notice The amount of COMP deposited by the delegate available for rewards to delegators
     uint256 public availableRewards;
@@ -68,9 +72,16 @@ contract Compensator is ERC20 {
     //////////////////////////
     // Constructor
     //////////////////////////
+    
+    constructor() ERC20("Compensator", "COMPENSATOR") {} 
 
-    constructor(address _delegate) ERC20("Compensator", "COMPSTR") {
+    //////////////////////////
+    // Initialization
+    //////////////////////////
+
+    function initialize(address _delegate, string memory _delegateName) public initializer {
         delegate = _delegate;
+        delegateName = _delegateName;
         rewardIndex = 1e18;
         compToken.delegate(delegate);
     }

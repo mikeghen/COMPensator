@@ -21,14 +21,15 @@ contract CompensatorTest is Test {
     address payable public delegator3 = payable(makeAddr("delegator3"));
 
     function setUp() public {
-        compensator = new Compensator(delegate);
+        compensator = new Compensator();
+        string memory delegateName = "Test Delegate";
+        compensator.initialize(delegate, delegateName);
 
         // Give the delegate some COMP
         deal(address(compToken), delegate, 1000 ether);
         deal(address(compToken), delegator1, 1000 ether);
         deal(address(compToken), delegator2, 1000 ether);
         deal(address(compToken), delegator3, 1000 ether);
-
     }
 }
 

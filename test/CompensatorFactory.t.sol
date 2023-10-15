@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import {Test, console2} from "forge-std/Test.sol";
 
@@ -15,7 +15,8 @@ contract CompensatorFactoryTest is DSTest {
 
     function test_createCompensator() public {
         address delegatee = address(0x123);
-        address compensator = factory.createCompensator(delegatee);
+        string memory delegateeName = "Test Delegatee";
+        address compensator = factory.createCompensator(delegatee, delegateeName);
         assertEq(factory.getCompensator(delegatee), compensator);
         assertEq(factory.getCompensators()[0], compensator);
     }
