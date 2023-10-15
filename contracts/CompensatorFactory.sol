@@ -7,20 +7,14 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 contract CompensatorFactory {
     address[] public compensators;
     mapping(address => address) public delegateeToCompensator;
-    address public immutable original;
 
-    constructor() {
-        Compensator compensator = new Compensator();
-        compensator.initialize(msg.sender, "Compensator Implementation");
-        original = address(compensator);
-    }
 
     function createCompensator(address delegatee, string memory delegateeName) external returns (address) {
-        address clone = Clones.cloneDeterministic(original, keccak256(abi.encode(delegatee)));
-        Compensator(clone).initialize(delegatee, delegateeName);
-        compensators.push(clone);
-        delegateeToCompensator[delegatee] = clone;
-        return clone;
+        Compensator compensator = new Compensator();       
+        compensator.initialize(delegatee, delegateeName);
+        compensators.push(address(compensator));
+        delegateeToCompensator[delegatee] = address(compensator);
+        return address(compensator);
     }
 
     function getCompensator(address delegatee) external view returns (address) {

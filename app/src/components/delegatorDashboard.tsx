@@ -83,7 +83,7 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
 
     useEffect(() => {
         if (pendingRewardsData.data) {
-            console.log("pendingRewardsData.data.toString()", pendingRewardsData.data.toString());
+            console.log("pendingRewardsData.data.toString()", pendingRewardsData.data);
             setPendingRewards(formatTokenAmount(pendingRewardsData.data.toString(), 18, 6));
         }
     }, [pendingRewardsData.data, address]);
