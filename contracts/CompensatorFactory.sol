@@ -17,4 +17,8 @@ contract CompensatorFactory {
     function getCompensator(address delegatee) external view returns (address) {
         return delegateeToCompensator[delegatee];
     }
+
+    function getCompensators() public view returns (address[] memory) {
+        return compensators;
+    }
 }

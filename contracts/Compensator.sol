@@ -96,7 +96,7 @@ contract Compensator is ERC20 {
     function getPendingRewards(address delegator) external view returns (uint256) {
         // Are there enough rewards?
         uint currIndex = _getCurrentRewardsIndex();
-        return balanceOf(delegator) * (currIndex - startRewardIndex[delegator]) / 1e18;
+    return balanceOf(delegator) * (currIndex - startRewardIndex[delegator]) / 1e18;
     }
 
     //////////////////////////

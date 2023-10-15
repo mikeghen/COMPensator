@@ -19,12 +19,12 @@ module.exports = {
       accounts: [`${process.env.PRIVATE_KEY}`]
     },
     ethereum: {
-      url: `${process.env.ETHEREUM_NODE_URL}`,
+      url: `${process.env.ETHEREUM_RPC_URL}`,
       accounts: [`${process.env.PRIVATE_KEY}`]
     }
   },
   tenderly: {
-    username: process.env.TENDERLY_USERNAME,
-    project: process.env.TENDERLY_PROJECT,
+    username: "mikeghen",
+    project: "compensator"
   }
 };
