@@ -44,6 +44,20 @@
     {
         "constant": true,
         "inputs": [],
+        "name": "delegateName",
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
         "name": "availableRewards",
         "outputs": [
             {
@@ -134,17 +148,6 @@
         "payable": false,
         "stateMutability": "view",
         "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "_delegate",
-                "type": "address"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "constructor"
     },
     {
         "constant": false,

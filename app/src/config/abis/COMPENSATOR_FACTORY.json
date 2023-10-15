@@ -38,6 +38,10 @@
             {
                 "name": "delegatee",
                 "type": "address"
+            },
+            {
+                "name": "delegateName",
+                "type": "string"
             }
         ],
         "name": "createCompensator",

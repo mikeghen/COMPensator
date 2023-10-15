@@ -6,6 +6,8 @@ import { approve, delegatorDeposit, delegatorWithdraw, claimRewards } from '../u
 import { formatTokenAmount } from '../utils/helpers';
 import {
     COMPENSATOR_ADDRESS,
+    COMPENSATOR_FACTORY_ADDRESS,
+    COMPENSATOR_FACTORY_ABI,
     COMPENSATOR_ABI,
     COMP_ADDRESS,
     ERC20_ABI
@@ -15,6 +17,7 @@ const DelegatorDashboard = () => {
     const { address } = useAccount();
 
     const [delegated, setDelegated] = useState('');
+    const [delegates, setDelegates] = useState([]); 
     const [pendingRewards, setPendingRewards] = useState('');
     const [compAllowance, setCompAllowance] = useState('');
     const [compBalance, setCompBalance] = useState('');
@@ -25,6 +28,21 @@ const DelegatorDashboard = () => {
 
     const [depositInput, setDepositInput] = useState('');
     const [withdrawInput, setWithdrawInput] = useState('');
+
+    // Get the delegates of the Delegator contract
+    const delegatesData = useContractRead({
+        addressOrName: COMPENSATOR_FACTORY_ADDRESS,
+        contractInterface: COMPENSATOR_FACTORY_ABI,
+        functionName: 'getCompensators',
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (delegatesData.data) {
+            console.log("delegatesData.data", delegatesData.data);
+            setDelegates(delegatesData.data);
+        }
+    }, [delegatesData.data]);
 
     // Get the allowance of COMPENSATOR_ADDRESS to spend the user's COMP tokens
     const compAllowanceData = useContractRead({
@@ -158,6 +176,7 @@ const DelegatorDashboard = () => {
                     <div className="card">
                         <div className="card-header">Manage Delegation</div>
                         <div className="card-body">
+                            <p><strong>COMP Balance:</strong> {compBalance} COMP</p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
                                 <div className="input-group-append">
@@ -183,6 +202,7 @@ const DelegatorDashboard = () => {
                             )}
                             <br />
                             <br />
+                            <p><strong>Delegated:</strong> {delegated} COMP</p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
                                 <div className="input-group-append">
@@ -198,6 +218,7 @@ const DelegatorDashboard = () => {
                             </button>
                             <br />
                             <br />
+                            <p><strong>Pending Rewards:</strong> {pendingRewards} COMP</p>
                             <button className="btn btn-primary" onClick={handleClaimRewards}>
                                 {claimLoading ? (
                                     <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

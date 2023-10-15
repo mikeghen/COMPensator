@@ -9,7 +9,7 @@ async function main() {
   await compensatorFactory.deployed();
   console.log("CompensatorFactory deployed to:", compensatorFactory.address);
 
-  await compensatorFactory.createCompensator(deployer.address);
+  await compensatorFactory.createCompensator(deployer.address, "Mike");
   const compensatorAddress = await compensatorFactory.getCompensator(deployer.address);
   console.log("Compensator deployed to:", compensatorAddress);
 

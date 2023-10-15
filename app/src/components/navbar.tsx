@@ -21,7 +21,7 @@ IProps) => {
         {/* Logo */}
         <div className="ml-1 transition duration-200 transform hover:rotate-20">
           <Link href="/">
-            <h1 className="text-2xl text-dark font-bold"><span className="rotating-hue">🎈</span> COMPensator</h1>
+            <h1 className="text-2xl text-dark font-bold"><span className="rotating-hue">🎈</span> Compensator</h1>
           </Link>
         </div>
 
@@ -35,6 +35,11 @@ IProps) => {
           <li>
             <Link href="/delegator">
               <a>Delegator</a>
+            </Link>
+          </li>
+          <li>
+            <Link href="/delegateList">
+              <a>Delegate List</a>
             </Link>
           </li>
           {/* Add more links here as needed */}

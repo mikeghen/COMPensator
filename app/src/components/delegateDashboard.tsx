@@ -24,6 +24,7 @@ const DelegateDashboard = () => {
     const [availableRewards, setAvailableRewards] = useState('');
     const [compRewardRate, setCompRewardRate] = useState('');
     const [rewardsUntil, setRewardsUntil] = useState('');
+    const [delegateName, setDelegateName] = useState('');
     const [compAllowance, setCompAllowance] = useState('');
     const [approveLoading, setApproveLoading] = useState(false);
     const [depositLoading, setDepositLoading] = useState(false);
@@ -204,7 +205,7 @@ const DelegateDashboard = () => {
     const handleCreateCompensator = async () => {
         try {
             setApproveLoading(true);
-            await createCompensator(address);
+            await createCompensator(address, delegateName);
             toast.success('Compensator contract created successfully!');
         } catch (error) {
             toast.error('Error creating compensator contract');
@@ -222,6 +223,7 @@ const DelegateDashboard = () => {
                     <div className="card-header">Create Compensator Contract</div>
                     <div className="card-body">
                         <p>You do not have a compensator contract yet. Click the button below to create one.</p>
+                        <input type="text" className="form-control" id="delegateNameInput" value={delegateName} onChange={e => setDelegateName(e.target.value)} placeholder="Enter Delegate Name" />
                         <button className="btn btn-primary" onClick={handleCreateCompensator}>Create Compensator Contract</button>
                     </div>
                 </div>

@@ -127,7 +127,7 @@ export const getPendingRewards = async (delegator: string) => {
     return pendingRewards;
 };
 
-export const createCompensator = async (delegate: string) => {
+export const createCompensator = async (delegate: string, delegateName: string) => {
     const provider = await getProvider();
     const signer = await getSigner(provider);
     const contract = new ethers.Contract(
@@ -136,6 +136,6 @@ export const createCompensator = async (delegate: string) => {
         signer
     );
 
-    const createCompensatorTx = await contract.createCompensator(delegate);
+    const createCompensatorTx = await contract.createCompensator(delegate, delegateName);
     await createCompensatorTx.wait();
 };
