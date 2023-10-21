@@ -16,11 +16,15 @@ module.exports = {
   networks: {
     tenderly: {
       url: `${process.env.TENDERLY_RPC_URL}`,
-      accounts: [`${process.env.PRIVATE_KEY}`]
+      accounts: {
+        mnemonic: `${process.env.MNEMONIC}`
+      }
     },
     ethereum: {
       url: `${process.env.ETHEREUM_RPC_URL}`,
-      accounts: [`${process.env.PRIVATE_KEY}`]
+      accounts: {
+        mnemonic: `${process.env.MNEMONIC}`
+      }
     }
   },
   tenderly: {

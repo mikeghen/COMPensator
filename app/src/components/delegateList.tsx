@@ -43,14 +43,12 @@ const DelegateList = () => {
                         <div className="col-md-6">
                             <div className="alert alert-primary" role="alert">
                                 <strong>How it works:</strong><br/>
-                                <p>
                                 <ol>
                                     <li>Find a delegate in this list you'd like to delegate to and click Delegate</li>
                                     <li>Deposit your COMP into the Delegate's Compensator contract</li>
                                     <li>Perodically claim your rewards</li>
                                     <li>Withdraw your COMP to stop delegating</li>
                                 </ol>
-                                </p>
                             </div>
                         </div>
                     </div>
