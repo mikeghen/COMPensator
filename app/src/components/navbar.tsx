@@ -26,19 +26,19 @@ IProps) => {
         </div>
 
         {/* Navigation links */}
-        <ul className="flex items-center space-x-4 mx-auto">
-          <li>
-            <Link href="/delegate">
+        <div className="flex items-center space-x-4 mx-auto">
+          <div>
+            <Link href="/delegateList">
               <a>Delegate</a>
             </Link>
-          </li>
-          <li>
-            <Link href="/delegateList">
-              <a>Delegate List</a>
+          </div>
+          <div>
+            <Link href="/delegate">
+              <a>Compensate</a>
             </Link>
-          </li>
-          {/* Add more links here as needed */}
-        </ul>
+          </div>
+          {/* Add more buttons here as needed */}
+        </div>
 
          {/* Connect to web3, dark mode toggle */}
         <div className="flex items-center space-x-2">

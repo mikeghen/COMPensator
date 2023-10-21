@@ -71,7 +71,7 @@ const DelegateRow = ({ compensatorAddress, onDelegateClick }) => {
                 setRewardPerMonthPerComp('0');
                 return;
             } else {
-                const rewardPerMonthPerComp = rewardRatePerMonth.div(Number(delegated));
+                const rewardPerMonthPerComp = rewardRatePerMonth.div(Number(delegated)).mul(12).mul(100);
                 setRewardPerMonthPerComp(formatTokenAmount(rewardPerMonthPerComp.toString(), 18, 2));
             }
         }
@@ -85,9 +85,9 @@ const DelegateRow = ({ compensatorAddress, onDelegateClick }) => {
         <tr>
             <td>{delegateName}</td>
             <td>{delegate.slice(0, 6) + '...' + delegate.slice(-4)}</td>
-            <td>{delegated} COMP</td>
-            <td>{rewardRate} COMP/month</td>
-            <td>{rewardPerMonthPerComp} /COMP/month</td>
+            <td><div style={{display: 'flex', alignItems: 'center'}}>{delegated} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} /></div></td>
+            <td><div style={{display: 'flex', alignItems: 'center'}}>{rewardRate} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} />/month</div></td>
+            <td><div style={{display: 'flex', alignItems: 'center'}}>{rewardPerMonthPerComp}%</div></td>
             <td><button className="btn btn-primary" onClick={handleDelegateClick}>Delegate</button></td>
         </tr>
     );

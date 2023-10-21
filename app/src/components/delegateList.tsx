@@ -32,7 +32,28 @@ const DelegateList = () => {
                 <DelegatorDashboard compensatorAddress={selectedDelegate} />
             ) : (
                 <>
-                    <h2>Incentivized Delegates</h2><br />
+                    <h2>Delegates</h2><br />
+                    <div className="row">
+                        <div className="col-md-6">
+                            <div className="alert alert-success" role="alert">
+                                <strong>Welcome to Compensator!</strong> <br/>
+                                Here you can delegate your COMP to a delegate and earn COMP rewards from the delegate themself. <br/><br/>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <div className="alert alert-primary" role="alert">
+                                <strong>How it works:</strong><br/>
+                                <p>
+                                <ol>
+                                    <li>Find a delegate in this list you'd like to delegate to and click Delegate</li>
+                                    <li>Deposit your COMP into the Delegate's Compensator contract</li>
+                                    <li>Perodically claim your rewards</li>
+                                    <li>Withdraw your COMP to stop delegating</li>
+                                </ol>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     <table className="table">
                         <thead>
                             <tr>
@@ -40,7 +61,7 @@ const DelegateList = () => {
                                 <th>Delegate</th>
                                 <th>Delegated</th>
                                 <th>Reward Rate</th>
-                                <th>Reward Per Month Per COMP</th>
+                                <th>APR</th>
                                 <th>Action</th>
                             </tr>
                         </thead>

@@ -16,7 +16,11 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
     const { address } = useAccount();
 
     const [delegated, setDelegated] = useState('');
-    const [delegates, setDelegates] = useState([]); 
+    const [totalDelegated, setTotalDelegated] = useState('');
+    const [availableRewards, setAvailableRewards] = useState('');
+    const [apr, setApr] = useState(''); 
+    const [rewardsUntil, setRewardsUntil] = useState(''); 
+    const [rewardRate, setRewardRate] = useState('');
     const [pendingRewards, setPendingRewards] = useState('');
     const [compAllowance, setCompAllowance] = useState('');
     const [compBalance, setCompBalance] = useState('');
@@ -27,21 +31,99 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
 
     const [depositInput, setDepositInput] = useState('');
     const [withdrawInput, setWithdrawInput] = useState('');
+    const [delegateName, setDelegateName] = useState('');
+    const [delegateAddress, setDelegateAddress] = useState('');
 
-    // Get the delegates of the Delegator contract
-    const delegatesData = useContractRead({
-        addressOrName: COMPENSATOR_FACTORY_ADDRESS,
-        contractInterface: COMPENSATOR_FACTORY_ABI,
-        functionName: 'getCompensators',
+    const rewardRateData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'rewardRate',
+        args: [],
         watch: true,
     });
 
     useEffect(() => {
-        if (delegatesData.data) {
-            console.log("delegatesData.data", delegatesData.data);
-            setDelegates(delegatesData.data);
+        if (rewardRateData.data) {
+            // Convert the reward rate from units per second to units per month
+            const rewardRatePerMonth = ethers.BigNumber.from(rewardRateData.data.toString()).mul(60 * 60 * 24 * 30);
+            // Convert the reward rate to APR using the totalSupply of COMP in the Compensator contract
+             // Compute and set the reward per month per COMP delegated
+             if(Number(totalDelegated) === 0) {
+                setApr('0');
+                return;
+            } else {
+                const rewardPerMonthPerComp = rewardRatePerMonth.div(Number(totalDelegated)).mul(12).mul(100);
+                setApr(formatTokenAmount(rewardPerMonthPerComp.toString(), 18, 2));
+            }
+            setRewardRate(formatTokenAmount(rewardRatePerMonth.toString(), 18, 6));
+
+            // Calculate rewards until date
+            const now = new Date();
+            const secondsUntil = Number(availableRewards) / Number(rewardRateData.data.toString());
+            const secondsUntilDate = new Date(now.getTime() + secondsUntil * 1000);
+            const formattedDate = secondsUntilDate.getFullYear() + '-' + (secondsUntilDate.getMonth()+1).toString().padStart(2, '0') + '-' + secondsUntilDate.getDate().toString().padStart(2, '0');
+            setRewardsUntil(formattedDate);
         }
-    }, [delegatesData.data]);
+    }, [rewardRateData.data]);
+
+    const availableRewardsData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'availableRewards',
+        args: [],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (availableRewardsData.data) {
+            setAvailableRewards(formatTokenAmount(availableRewardsData.data.toString(), 18, 6));
+        }
+    },  [availableRewardsData.data]);
+
+    const totalDelegatedData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'totalSupply',
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (totalDelegatedData.data) {
+            setTotalDelegated(formatTokenAmount(totalDelegatedData.data.toString(), 18, 2));
+        }
+    }, [totalDelegatedData.data]);
+
+    // Get the delegate for this compensator contract
+    const delegateData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'delegate',
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (delegateData.data) {
+            setDelegateAddress(ethers.utils.getAddress(delegateData.data));
+        }
+    }, [delegateData.data]);
+
+
+
+    // Get the name of the delegate from the Compensator contract
+    const delegateNameData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'delegateName',
+        args: [],
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (delegateNameData.data) {
+            setDelegateName(delegateNameData.data);
+        }
+    }, [delegateNameData.data]);
+
 
     // Get the allowance of COMPENSATOR_ADDRESS to spend the user's COMP tokens
     const compAllowanceData = useContractRead({
@@ -62,7 +144,8 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
     const delegatedBalanceData = useContractRead({
         addressOrName: compensatorAddress,
         contractInterface: ERC20_ABI,
-        functionName: 'totalSupply',
+        functionName: 'balanceOf',
+        args: [address],
         watch: true,
     });
 
@@ -159,15 +242,20 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
 
     return (
         <div className="container">
-            <h2>Delegator Dashboard</h2><br />
+            
+            <h2>Delegate: {delegateName}</h2><br />
             <div className="row">
                 <div className="col-md-6 mb-4 mb-md-0">
                     <div className="card">
-                        <div className="card-header">Delegator Statistics</div>
+                        <div className="card-header">Delegate Information</div>
                         <div className="card-body">
-                            <p><strong>Delegated:</strong> {delegated} COMP</p>
-                            <p><strong>Pending Rewards:</strong> {pendingRewards} COMP</p>
-                            <p><strong>COMP Balance:</strong> {compBalance} COMP</p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>APR:</strong> &nbsp; {apr}%</div></p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Rewards Until:</strong> &nbsp; {rewardsUntil}</div></p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Total Delegated:</strong> &nbsp; {totalDelegated} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Available Rewards:</strong> &nbsp; {availableRewards} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Reward Rate:</strong> &nbsp; {rewardRate} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} />/month</div></p>
+                            <p><strong>Delegate Address:</strong><br/> {delegateAddress}</p>
+                            <p><strong>Compensator Address:</strong><br/>{compensatorAddress}</p>
                         </div>
                     </div>
                 </div>
@@ -175,11 +263,11 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                     <div className="card">
                         <div className="card-header">Manage Delegation</div>
                         <div className="card-body">
-                            <p><strong>COMP Balance:</strong> {compBalance} COMP</p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Your Balance: </strong>&nbsp; {compBalance} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
                                 <div className="input-group-append">
-                                    <span className="input-group-text">COMP</span>
+                                    <span className="input-group-text"><img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></span>
                                 </div>
                             </div>
                             {Number(compAllowance) > 0 ? (
@@ -201,11 +289,11 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                             )}
                             <br />
                             <br />
-                            <p><strong>Delegated:</strong> {delegated} COMP</p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Delegated:</strong>&nbsp; {delegated} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
                                 <div className="input-group-append">
-                                    <span className="input-group-text">COMP</span>
+                                    <span className="input-group-text"><img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></span>
                                 </div>
                             </div>
                             <button className="btn btn-primary" onClick={handleDelegatorWithdraw}>
@@ -217,7 +305,7 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                             </button>
                             <br />
                             <br />
-                            <p><strong>Pending Rewards:</strong> {pendingRewards} COMP</p>
+                            <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Pending Rewards:</strong> &nbsp;  {pendingRewards} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
                             <button className="btn btn-primary" onClick={handleClaimRewards}>
                                 {claimLoading ? (
                                     <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -230,6 +318,8 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                 </div>
             </div>
         </div>
+        
+        
     );
 };
 
