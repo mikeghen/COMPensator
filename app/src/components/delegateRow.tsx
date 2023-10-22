@@ -95,3 +95,6 @@ const DelegateRow = ({ compensatorAddress, onDelegateClick }) => {
 
 export default DelegateRow;
 
+
+
+

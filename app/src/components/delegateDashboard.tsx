@@ -218,13 +218,30 @@ const DelegateDashboard = () => {
     return (
         <div className="container">
             {compensatorAddress === '' ? (
-
+                <div className="row justify-content-center">
+                <div className="col-md-6">
                 <div className="card">
                     <div className="card-header">Create Compensator Contract</div>
                     <div className="card-body">
-                        <p>You do not have a compensator contract yet. Click the button below to create one.</p>
-                        <input type="text" className="form-control" id="delegateNameInput" value={delegateName} onChange={e => setDelegateName(e.target.value)} placeholder="Enter Delegate Name" />
-                        <button className="btn btn-primary" onClick={handleCreateCompensator}>Create Compensator Contract</button>
+                        
+                                <div className="alert alert-warning" role="alert">
+                                    You do not have a compensator contract yet. Create one below!
+                                </div>
+                                <div className="input-group">
+                                    <input type="text" className="form-control" id="delegateNameInput" value={delegateName} onChange={e => setDelegateName(e.target.value)} placeholder="Enter Delegate Name" />
+                                    <div className="input-group-append">
+                                        <button className="btn btn-primary" onClick={handleCreateCompensator}>Create Compensator Contract</button>
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <div className="alert alert-success" role="alert">
+                                    <h4 className="alert-heading">How Compensator works:</h4>
+                                    <p>1. Create a Compensator contract with a descriptive name</p>
+                                    <p>2. After creation, deposit COMP rewards and set a reward rate</p>
+                                    <p>3. Promote your Compensator contract to the community!</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -236,9 +253,9 @@ const DelegateDashboard = () => {
                                 <div className="card-header">Delegate Statistics</div>
                                 <div className="card-body">
                                     <p><strong>Compensator Address:</strong> {compensatorAddress}</p>
-                                    <p><strong>Delegated:</strong> {delegated} COMP</p>
-                                    <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
-                                    <p><strong>Reward Rate:</strong> {compRewardRate} COMP/month</p>
+                                    <p><strong>Delegated:</strong> <div style={{display: 'flex', alignItems: 'center'}}>{delegated} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} /></div></p>
+                                    <p><strong>Available Rewards:</strong> <div style={{display: 'flex', alignItems: 'center'}}>{availableRewards} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} /></div></p>
+                                    <p><strong>Reward Rate:</strong> <div style={{display: 'flex', alignItems: 'center'}}>{compRewardRate} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} />/month</div></p>
                                     <p><strong>Rewards Until:</strong> {rewardsUntil}</p>
                                 </div>
                             </div>
@@ -247,49 +264,47 @@ const DelegateDashboard = () => {
                             <div className="card">
                                 <div className="card-header">Manage Delegator Rewards</div>
                                 <div className="card-body">
-                                    <p><strong>COMP Balance:</strong> {userCompBalance} COMP</p>
+                                    <p><div style={{display: 'flex', alignItems: 'center'}}><strong>COMP Balance:</strong> &nbsp; {userCompBalance} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} /></div></p>
                                     <div className="input-group mb-3">
                                         <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
-                                        <div className="input-group-append">
-                                            <span className="input-group-text">COMP</span>
-                                        </div>
+                                        {Number(compAllowance) > 0 ? (
+                                            <div className="input-group-append">
+                                                <button className="btn btn-primary" onClick={handleDelegateDeposit}>
+                                                    {depositLoading ? (
+                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                    ) : (
+                                                        'Deposit'
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="input-group-append">
+                                                <button className="btn btn-primary" onClick={handleApproveCOMP}>
+                                                    {approveLoading ? (
+                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                    ) : (
+                                                        'Approve'
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    {Number(compAllowance) > 0 ? (
-                                        <button className="btn btn-primary" onClick={handleDelegateDeposit}>
-                                            {depositLoading ? (
-                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            ) : (
-                                                'Deposit'
-                                            )}
-                                        </button>
-                                    ) : (
-                                        <button className="btn btn-primary" onClick={handleApproveCOMP}>
-                                            {approveLoading ? (
-                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            ) : (
-                                                'Approve'
-                                            )}
-                                        </button>
-                                    )}
                                     <br />
-                                    <br />
-                                    <p><strong>Available Rewards:</strong> {availableRewards} COMP</p>
+                                    <p><div style={{display: 'flex', alignItems: 'center'}}><strong>Available Rewards:</strong> &nbsp; {availableRewards} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} /></div></p>
                                     <div className="input-group mb-3">
                                         <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
                                         <div className="input-group-append">
-                                            <span className="input-group-text">COMP</span>
+                                            <button className="btn btn-primary" onClick={handleDelegateWithdraw}>
+                                                {withdrawLoading ? (
+                                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                ) : (
+                                                    'Withdraw'
+                                                )}
+                                            </button>
                                         </div>
                                     </div>
-                                    <button className="btn btn-primary" onClick={handleDelegateWithdraw}>
-                                        {withdrawLoading ? (
-                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        ) : (
-                                            'Withdraw'
-                                        )}
-                                    </button>
                                     <br />
-                                    <br />
-                                    <p><strong>Rewards Rate:</strong> {compRewardRate} COMP/month</p>
+                                    <p><div style={{display: 'flex', alignItems: 'center'}}><strong>Rewards Rate:</strong> &nbsp; {compRewardRate} <img src="/compound-comp-logo.svg" alt="COMP" style={{width: '20px', height: '20px', marginLeft: '5px'}} />/month</div></p>
                                     <div className="input-group mb-3">
                                         <input
                                             type="text"
@@ -299,16 +314,15 @@ const DelegateDashboard = () => {
                                             onChange={e => setRewardRateInput(e.target.value)}
                                         />
                                         <div className="input-group-append">
-                                            <span className="input-group-text">/month</span>
+                                            <button className="btn btn-primary" onClick={handleSetRewardRate}>
+                                                {rewardRateLoading ? (
+                                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                ) : (
+                                                    'Set Reward Rate'
+                                                )}
+                                            </button>
                                         </div>
                                     </div>
-                                    <button className="btn btn-primary" onClick={handleSetRewardRate}>
-                                        {rewardRateLoading ? (
-                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        ) : (
-                                            'Set Reward Rate'
-                                        )}
-                                    </button>
                                 </div>
                             </div>
                         </div>

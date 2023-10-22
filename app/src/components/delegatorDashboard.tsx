@@ -56,15 +56,24 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                 setApr(formatTokenAmount(rewardPerMonthPerComp.toString(), 18, 2));
             }
             setRewardRate(formatTokenAmount(rewardRatePerMonth.toString(), 18, 6));
-
-            // Calculate rewards until date
-            const now = new Date();
-            const secondsUntil = Number(availableRewards) / Number(rewardRateData.data.toString());
-            const secondsUntilDate = new Date(now.getTime() + secondsUntil * 1000);
-            const formattedDate = secondsUntilDate.getFullYear() + '-' + (secondsUntilDate.getMonth()+1).toString().padStart(2, '0') + '-' + secondsUntilDate.getDate().toString().padStart(2, '0');
-            setRewardsUntil(formattedDate);
         }
     }, [rewardRateData.data]);
+
+    // Get the rewards until from the Compensator contract
+    const rewardsUntilData = useContractRead({
+        addressOrName: compensatorAddress,
+        contractInterface: COMPENSATOR_ABI,
+        functionName: 'rewardsUntil',
+        watch: true,
+    });
+
+    useEffect(() => {
+        if (rewardsUntilData.data) {
+            const date = new Date(rewardsUntilData.data.toNumber() * 1000);
+            const dateString = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            setRewardsUntil(dateString);
+        }
+    }, [rewardsUntilData.data]);
 
     const availableRewardsData = useContractRead({
         addressOrName: compensatorAddress,
@@ -167,7 +176,7 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
     useEffect(() => {
         if (pendingRewardsData.data) {
             console.log("pendingRewardsData.data.toString()", pendingRewardsData.data);
-            setPendingRewards(formatTokenAmount(pendingRewardsData.data.toString(), 18, 6));
+            setPendingRewards(formatTokenAmount(pendingRewardsData.data.toString(), 18, 10));
         }
     }, [pendingRewardsData.data, address]);
 
@@ -266,43 +275,43 @@ const DelegatorDashboard = ({ compensatorAddress }) => {
                             <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Your Balance: </strong>&nbsp; {compBalance} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="depositInput" value={depositInput} onChange={e => setDepositInput(e.target.value)} />
-                                <div className="input-group-append">
-                                    <span className="input-group-text"><img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></span>
-                                </div>
+                                {Number(compAllowance) > 0 ? (
+                                    <div className="input-group-append">
+                                        <button className="btn btn-primary" onClick={handleDelegatorDeposit}>
+                                            {depositLoading ? (
+                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            ) : (
+                                                'Deposit'
+                                            )}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="input-group-append">
+                                        <button className="btn btn-primary" onClick={handleApproveCOMP}>
+                                            {approveLoading ? (
+                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            ) : (
+                                                'Approve'
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            {Number(compAllowance) > 0 ? (
-                                <button className="btn btn-primary" onClick={handleDelegatorDeposit}>
-                                    {depositLoading ? (
-                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    ) : (
-                                        'Deposit'
-                                    )}
-                                </button>
-                            ) : (
-                                <button className="btn btn-primary" onClick={handleApproveCOMP}>
-                                    {approveLoading ? (
-                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    ) : (
-                                        'Approve'
-                                    )}
-                                </button>
-                            )}
                             <br />
                             <br />
                             <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Delegated:</strong>&nbsp; {delegated} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" id="withdrawInput" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)} />
                                 <div className="input-group-append">
-                                    <span className="input-group-text"><img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></span>
+                                    <button className="btn btn-primary" onClick={handleDelegatorWithdraw}>
+                                        {withdrawLoading ? (
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        ) : (
+                                            'Withdraw'
+                                        )}
+                                    </button>
                                 </div>
                             </div>
-                            <button className="btn btn-primary" onClick={handleDelegatorWithdraw}>
-                                {withdrawLoading ? (
-                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                ) : (
-                                    'Withdraw'
-                                )}
-                            </button>
                             <br />
                             <br />
                             <p><div style={{ display: 'flex', alignItems: 'center' }}><strong>Pending Rewards:</strong> &nbsp;  {pendingRewards} <img src="/compound-comp-logo.svg" alt="COMP" style={{ width: '20px', height: '20px', marginLeft: '5px' }} /></div></p>
